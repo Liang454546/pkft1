@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Retro PokeBattle Gen5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Noto Sans TC', 'Press Start 2P', sans-serif;
+        background-color: #1a1a1a;
+        image-rendering: pixelated;
+        overflow: hidden;
+      }
+      
+      /* --- EXISTING ANIMATIONS --- */
+      @keyframes shake {
+        0% { transform: translate(0, 0); }
+        25% { transform: translate(-5px, 5px); }
+        50% { transform: translate(5px, -5px); }
+        75% { transform: translate(-5px, -5px); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes lunge-enemy {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(-30px, 30px); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes lunge-player {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(30px, -30px); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes flash-damage {
+        0%, 100% { opacity: 1; filter: brightness(1); }
+        50% { opacity: 0.5; filter: brightness(100) sepia(1) hue-rotate(-50deg) saturate(5); }
+      }
+      @keyframes bounce-slight {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+      }
+
+      /* --- NEW CINEMATIC ANIMATIONS --- */
+      
+      /* Trainer Exit Animations */
+      @keyframes slide-out-left {
+        0% { transform: translateX(0); opacity: 1; }
+        100% { transform: translateX(-300px); opacity: 0; }
+      }
+      @keyframes slide-out-right {
+        0% { transform: translateX(0); opacity: 1; }
+        100% { transform: translateX(300px); opacity: 0; }
+      }
+      
+      /* Slide In for HUDs */
+      @keyframes slide-in-right {
+        0% { transform: translateX(100px); opacity: 0; }
+        100% { transform: translateX(0); opacity: 1; }
+      }
+
+      /* Recall/Release */
+      @keyframes recall-player {
+        0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+        20% { transform: scale(1); opacity: 1; filter: brightness(100) sepia(1) saturate(5) hue-rotate(-50deg); }
+        100% { transform: scale(0) translate(-200px, 100px); opacity: 0; }
+      }
+      @keyframes recall-enemy {
+        0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+        20% { transform: scale(1); opacity: 1; filter: brightness(100) sepia(1) saturate(5) hue-rotate(-50deg); }
+        100% { transform: scale(0) translate(200px, -100px); opacity: 0; }
+      }
+
+      @keyframes release-player {
+        0% { transform: scale(0) translate(-100px, 50px); opacity: 0; filter: brightness(3); }
+        60% { transform: scale(1.2) translate(0, 0); opacity: 1; filter: brightness(2); }
+        100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+      }
+      @keyframes release-enemy {
+        0% { transform: scale(0) translate(100px, -50px); opacity: 0; filter: brightness(3); }
+        60% { transform: scale(1.2) translate(0, 0); opacity: 1; filter: brightness(2); }
+        100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+      }
+      
+      @keyframes capture-shrink {
+        0% { transform: scale(1); filter: brightness(1); }
+        20% { transform: scale(1); filter: brightness(100) sepia(1) saturate(5) hue-rotate(-50deg); }
+        100% { transform: scale(0.1); opacity: 0; }
+      }
+
+      /* Trainer Gestures */
+      @keyframes trainer-command {
+         0%, 100% { transform: translateX(0); }
+         50% { transform: translateX(10px); }
+      }
+      @keyframes trainer-cheer {
+         0%, 100% { transform: translateY(0); }
+         50% { transform: translateY(-10px); }
+      }
+
+      /* Crowd Animations */
+      @keyframes crowd-wave {
+        0%, 100% { transform: translateY(0); opacity: 0.3; }
+        25% { transform: translateY(-2px); opacity: 0.5; }
+        50% { transform: translateY(0); opacity: 0.3; }
+        75% { transform: translateY(-2px); opacity: 0.5; }
+      }
+      
+      @keyframes spotlight-sweep {
+        0% { transform: rotate(-15deg); opacity: 0.3; }
+        50% { transform: rotate(15deg); opacity: 0.6; }
+        100% { transform: rotate(-15deg); opacity: 0.3; }
+      }
+
+      @keyframes ball-throw-player {
+        0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
+        50% { transform: translate(150px, -150px) scale(1); }
+        100% { transform: translate(300px, -50px) scale(0.5); opacity: 1; }
+      }
+      @keyframes ball-shake {
+        0%, 100% { transform: rotate(0); }
+        25% { transform: rotate(-20deg); }
+        75% { transform: rotate(20deg); }
+      }
+      
+      /* --- SIMPLIFIED MEGA ANIMATIONS (2.4s) --- */
+      
+      @keyframes beam-enter {
+        0% { transform: scaleY(0); opacity: 0; }
+        100% { transform: scaleY(1); opacity: 1; }
+      }
+      
+      @keyframes hex-spin {
+        0% { transform: rotate(0deg) scale(0.5); opacity: 0; }
+        50% { opacity: 1; }
+        100% { transform: rotate(180deg) scale(1.5); opacity: 1; }
+      }
+      
+      @keyframes sphere-pulse {
+        0% { transform: scale(0.8); opacity: 0.6; filter: blur(2px); }
+        50% { transform: scale(1.1); opacity: 0.9; filter: blur(6px); }
+        100% { transform: scale(1); opacity: 1; filter: blur(4px); }
+      }
+      
+      @keyframes burst-expand {
+        0% { transform: scale(0); opacity: 1; border-width: 50px; }
+        100% { transform: scale(4); opacity: 0; border-width: 0px; }
+      }
+      
+      @keyframes shake-hard {
+        0%, 100% { transform: translate(0, 0); }
+        10%, 30%, 50%, 70%, 90% { transform: translate(-10px, -10px); }
+        20%, 40%, 60%, 80% { transform: translate(10px, 10px); }
+      }
+      
+      @keyframes float-up {
+        0% { transform: translateY(0) scale(1); opacity: 1; }
+        100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+      }
+      
+      /* Zoom in then fade out quickly */
+      @keyframes zoom-fade {
+        0% { transform: scale(0.5); opacity: 0; }
+        20% { transform: scale(1.2); opacity: 1; }
+        40% { transform: scale(1); opacity: 1; }
+        80% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1.5); opacity: 0; }
+      }
+
+      @keyframes camera-push {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.05); }
+      }
+
+      @keyframes flash-white {
+        0% { background-color: transparent; }
+        10% { background-color: white; }
+        100% { background-color: transparent; }
+      }
+
+      /* Utility Classes */
+      .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+      .animate-lunge-p { animation: lunge-player 0.3s ease-in-out; }
+      .animate-lunge-e { animation: lunge-enemy 0.3s ease-in-out; }
+      .animate-flash { animation: flash-damage 0.4s ease-in-out; }
+      .animate-mega-entry { animation: release-player 0.5s ease-out forwards; } 
+      .animate-bounce-slight { animation: bounce-slight 2s infinite ease-in-out; }
+      
+      .animate-recall-p { animation: recall-player 0.8s ease-in forwards; }
+      .animate-recall-e { animation: recall-enemy 0.8s ease-in forwards; }
+      .animate-release-p { animation: release-player 0.8s ease-out forwards; }
+      .animate-release-e { animation: release-enemy 0.8s ease-out forwards; }
+      .animate-capture { animation: capture-shrink 0.8s ease-in forwards; }
+
+      .animate-slide-out-left { animation: slide-out-left 1s ease-in forwards; }
+      .animate-slide-out-right { animation: slide-out-right 1s ease-in forwards; }
+      .animate-slide-in-right { animation: slide-in-right 0.5s ease-out forwards; }
+
+      .animate-command { animation: trainer-command 0.5s ease-in-out; }
+      .animate-cheer { animation: trainer-cheer 0.5s ease-in-out infinite; }
+      .animate-ball-throw { animation: ball-throw-player 1s linear forwards; }
+      
+      .animate-hex-spin { animation: hex-spin 0.4s ease-out forwards; }
+      .animate-beam-enter { animation: beam-enter 0.2s ease-out forwards; }
+      .animate-sphere-pulse { animation: sphere-pulse 0.8s ease-in-out infinite; }
+      .animate-burst-expand { animation: burst-expand 0.6s ease-out forwards; }
+      .animate-shake-hard { animation: shake-hard 0.4s ease-in-out; }
+      .animate-float-up { animation: float-up 1.5s ease-out forwards; }
+      .animate-camera-push { animation: camera-push 2.4s ease-out forwards; }
+      .animate-flash-white { animation: flash-white 0.5s ease-out forwards; }
+      .animate-zoom-fade { animation: zoom-fade 0.8s ease-out forwards; }
+
+      .pixelated { image-rendering: pixelated; }
+      
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #1f2937; }
+      ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <!-- Global SVG Definitions -->
+    <svg width="0" height="0" style="position: absolute;">
+      <defs>
+        <linearGradient id="globalRainbow" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#4ade80" /> 
+          <stop offset="33%" stop-color="#22d3ee" /> 
+          <stop offset="66%" stop-color="#a855f7" /> 
+          <stop offset="100%" stop-color="#f472b6" />
+        </linearGradient>
+        <radialGradient id="megaOrb" cx="50%" cy="50%" r="50%">
+           <stop offset="0%" stop-color="rgba(255,255,255,0.9)" />
+           <stop offset="50%" stop-color="rgba(255,255,255,0.5)" />
+           <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+        </radialGradient>
+      </defs>
+    </svg>
+    <div id="root"></div>
+  </body>
+</html>
